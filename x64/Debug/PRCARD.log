@@ -1,0 +1,51 @@
+﻿  main.cpp
+C:\Users\ADMIN\Desktop\Учебус\Разработчик\C++\PRCARD\main.cpp(53,19): warning C4244: аргумент: преобразование "time_t" в "unsigned int", возможна потеря данных
+C:\Users\ADMIN\Desktop\Учебус\Разработчик\C++\PRCARD\main.cpp(208,24): warning C4553: "==": результат выражения не используется; вы хотели использовать "="?
+C:\Users\ADMIN\Desktop\Учебус\Разработчик\C++\PRCARD\main.cpp(211,23): warning C4553: "==": результат выражения не используется; вы хотели использовать "="?
+C:\Users\ADMIN\Desktop\Учебус\Разработчик\C++\PRCARD\main.cpp(454,17): warning C4244: инициализация: преобразование "double" в "int", возможна потеря данных
+C:\Users\ADMIN\Desktop\Учебус\Разработчик\C++\PRCARD\main.cpp(462,64): warning C4244: аргумент: преобразование "int" в "float", возможна потеря данных
+C:\Users\ADMIN\Desktop\Учебус\Разработчик\C++\PRCARD\main.cpp(462,35): warning C4244: аргумент: преобразование "int" в "float", возможна потеря данных
+C:\Users\ADMIN\Desktop\Учебус\Разработчик\C++\PRCARD\main.cpp(478,17): warning C4244: инициализация: преобразование "double" в "int", возможна потеря данных
+C:\Users\ADMIN\Desktop\Учебус\Разработчик\C++\PRCARD\main.cpp(487,64): warning C4244: аргумент: преобразование "int" в "float", возможна потеря данных
+C:\Users\ADMIN\Desktop\Учебус\Разработчик\C++\PRCARD\main.cpp(487,35): warning C4244: аргумент: преобразование "int" в "float", возможна потеря данных
+C:\Users\ADMIN\Desktop\Учебус\Разработчик\C++\PRCARD\main.cpp(524,40): warning C4244: аргумент: преобразование "int" в "float", возможна потеря данных
+C:\Users\ADMIN\Desktop\Учебус\Разработчик\C++\PRCARD\main.cpp(524,34): warning C4244: аргумент: преобразование "int" в "float", возможна потеря данных
+C:\Users\ADMIN\Desktop\Учебус\Разработчик\C++\PRCARD\main.cpp(526,36): warning C4244: аргумент: преобразование "int" в "float", возможна потеря данных
+C:\Users\ADMIN\Desktop\Учебус\Разработчик\C++\PRCARD\main.cpp(526,28): warning C4244: аргумент: преобразование "int" в "float", возможна потеря данных
+C:\Users\ADMIN\Desktop\Учебус\Разработчик\C++\PRCARD\main.cpp(535,35): warning C4244: аргумент: преобразование "int" в "float", возможна потеря данных
+C:\Users\ADMIN\Desktop\Учебус\Разработчик\C++\PRCARD\main.cpp(535,27): warning C4244: аргумент: преобразование "int" в "float", возможна потеря данных
+C:\Users\ADMIN\Desktop\Учебус\Разработчик\C++\PRCARD\main.cpp(550,36): warning C4244: аргумент: преобразование "int" в "float", возможна потеря данных
+C:\Users\ADMIN\Desktop\Учебус\Разработчик\C++\PRCARD\main.cpp(550,28): warning C4244: аргумент: преобразование "int" в "float", возможна потеря данных
+C:\Users\ADMIN\Desktop\Учебус\Разработчик\C++\PRCARD\main.cpp(559,21): warning C4244: инициализация: преобразование "double" в "int", возможна потеря данных
+C:\Users\ADMIN\Desktop\Учебус\Разработчик\C++\PRCARD\main.cpp(569,68): warning C4244: аргумент: преобразование "int" в "float", возможна потеря данных
+C:\Users\ADMIN\Desktop\Учебус\Разработчик\C++\PRCARD\main.cpp(569,39): warning C4244: аргумент: преобразование "int" в "float", возможна потеря данных
+C:\Users\ADMIN\Desktop\Учебус\Разработчик\C++\PRCARD\main.cpp(605,45): warning C4244: аргумент: преобразование "int" в "float", возможна потеря данных
+C:\Users\ADMIN\Desktop\Учебус\Разработчик\C++\PRCARD\main.cpp(605,39): warning C4244: аргумент: преобразование "int" в "float", возможна потеря данных
+C:\Users\ADMIN\Desktop\Учебус\Разработчик\C++\PRCARD\main.cpp(611,45): warning C4244: аргумент: преобразование "int" в "float", возможна потеря данных
+C:\Users\ADMIN\Desktop\Учебус\Разработчик\C++\PRCARD\main.cpp(611,39): warning C4244: аргумент: преобразование "int" в "float", возможна потеря данных
+C:\Users\ADMIN\Desktop\Учебус\Разработчик\C++\PRCARD\main.cpp(618,42): warning C4244: аргумент: преобразование "int" в "float", возможна потеря данных
+C:\Users\ADMIN\Desktop\Учебус\Разработчик\C++\PRCARD\main.cpp(618,32): warning C4244: аргумент: преобразование "int" в "float", возможна потеря данных
+C:\Users\ADMIN\Desktop\Учебус\Разработчик\C++\PRCARD\main.cpp(623,42): warning C4244: аргумент: преобразование "int" в "float", возможна потеря данных
+C:\Users\ADMIN\Desktop\Учебус\Разработчик\C++\PRCARD\main.cpp(623,32): warning C4244: аргумент: преобразование "int" в "float", возможна потеря данных
+C:\Users\ADMIN\Desktop\Учебус\Разработчик\C++\PRCARD\main.cpp(628,57): warning C4244: аргумент: преобразование "int" в "float", возможна потеря данных
+C:\Users\ADMIN\Desktop\Учебус\Разработчик\C++\PRCARD\main.cpp(628,39): warning C4244: аргумент: преобразование "int" в "float", возможна потеря данных
+C:\Users\ADMIN\Desktop\Учебус\Разработчик\C++\PRCARD\main.cpp(649,84): warning C4244: аргумент: преобразование "T" в "T", возможна потеря данных
+          with
+          [
+              T=unsigned int
+          ]
+          and
+          [
+              T=float
+          ]
+C:\Users\ADMIN\Desktop\Учебус\Разработчик\C++\PRCARD\main.cpp(649,64): warning C4244: аргумент: преобразование "T" в "T", возможна потеря данных
+          with
+          [
+              T=unsigned int
+          ]
+          and
+          [
+              T=float
+          ]
+C:\Users\ADMIN\Desktop\Учебус\Разработчик\C++\PRCARD\main.cpp(359): warning C4715: enemyTurn: значение возвращается не при всех путях выполнения
+  PRCARD.vcxproj -> C:\Users\ADMIN\Desktop\Учебус\Разработчик\C++\PRCARD\x64\Debug\PRCARD.exe
