@@ -5,11 +5,14 @@
 //#include <mutex>//метод синхронизации потоков
 #include <thread>//потоки
 #include <chrono>//время
-#define enemyCardDraw 1//1- показать 2- спрятать
+#include <SFML/Audio.hpp>
+#define enemyCardDraw 2//1- показать 2- спрятать
+#define botON 0;//0-бот отключен 1-включен
 #define random(a,b) a+rand()%(b+1-a)
 using namespace std;
 using namespace sf;
 
+bool flagStart = 0;
 bool TURN = 0;
 bool ROUND_END = 0;
 int positionCardChouse = 0;//отслеживание какую карты выбрал игрок
@@ -19,6 +22,8 @@ bool pushR = 0;
 const string CARDSUIT[4]{"Spades","Hearts","Diamonds","Clubs" };
 int tranlocateCard = 0;//перемещение карт
 bool gameIsOpen = 1;
+int flagSound = 0;
+int win = 0;
 int animCard = 0;//запуск анимаций
 /*0-нет анимации
 1-получение карты из колоды игроком
@@ -65,7 +70,7 @@ struct Desk
         }
         int index = counter - 1;
         Card* removedCard = cards[index];
-        cards[index] = nullptr; // set to nullptr to avoid double deletion
+        cards[index] = nullptr; 
         counter--;
         if (counter == 0) {
             delete[] cards;
@@ -167,14 +172,15 @@ void loadCards(Desk& desk)
     for (int i = 0; i < 36; i++)
     {
         Card* card=new Card[1];
-        // Calculate suit and value based on position in the image
+
         card[0].suit = i / 9;
         card[0].value = (i % 9) + 6;
-
-        // Set the texture rectangle for the card
+        //создаёт прямоугольник по требуемым координатам
         sf::IntRect textureRect(70 * (i % 9), 98 * (i / 9), 70, 98);
+        //добавляет размытие
         card[0].texture.setSmooth(true);
         card[0].texture.setRepeated(false);
+        //вырезает из основного изображения карты по прямоугольнику
         card[0].texture.loadFromFile("card3.png", textureRect);
         desk.addCards(card);
     }
@@ -186,13 +192,18 @@ void loadCards(Desk& desk)
 
 }
 void addCard(Desk& desk,Player &player) {
+    
     if (desk.counter > 0) {
+
         for (int i = player.counter; i < 6; i++) {
+            flagSound = 2;
             if (player.player) {
                 animCard = 1;
             }
             else animCard = 2;
             while (animCard) {
+                
+                std::this_thread::sleep_for(std::chrono::milliseconds(200));
                 //ожидание окончания анимации
             }
             player.addCards(desk.removeCard());
@@ -202,17 +213,22 @@ void addCard(Desk& desk,Player &player) {
 //кто ходит первым(по младшей масти)
 bool scanToStart(Desk& desk, Player& player, Player& enemy) {
     
-    int playerSuit = 13;
-    int enemySuit = 13;
+    int playerValue = 15;
+    int enemyValue = 15;
     for (int i = 0; i < 6; i++) {
-        if (player.cards[i][0].suit == desk.cards[0]->suit && player.cards[i][0].value <playerSuit) {
-            playerSuit == player.cards[i][0].value;
+        //если карта козырь и она меньше предыдущей карты 
+        //cout << "player card suit" << player.cards[i][0].suit << "Player card value"<< player.cards[i][0].value << endl;
+        //cout << "desk card suit" << desk.suitInt << "old value"<< playerValue << endl;
+        cout << player.cards[i][0].suit << "==" << desk.suitInt << "&&" << player.cards[i][0].value << "<" << playerValue << endl;
+        if (player.cards[i][0].suit == desk.suitInt && player.cards[i][0].value <playerValue) {
+            playerValue = player.cards[i][0].value;
         }
-        if (enemy.cards[i][0].suit == desk.cards[0]->suit && enemy.cards[i][0].value < enemySuit) {
-            enemySuit == enemy.cards[i][0].value;
+        if (enemy.cards[i][0].suit == desk.suitInt && enemy.cards[i][0].value < enemyValue) {
+            enemyValue = enemy.cards[i][0].value;
         }
     }
-    return ((playerSuit < enemySuit) ? 1 : 0);
+    cout << "EnemyValue: " << enemyValue << "PlayerValue: " << playerValue << endl;
+    return ((playerValue < enemyValue) ? 1 : 0);
 
 
 
@@ -247,133 +263,145 @@ bool scanDopCard(Desk& field, Card& card, Desk& desk) {
 }
 //ход противника
 bool enemyTurn(Desk& field, Player& enemy,bool turn,Desk& desk,Desk& discarding) {
-    if (field.counter == 0) {
-        //выбирает самую маленькую не козырную карту
-        int x = 14;
-        int j = 0;
-        for (int i = 0; i <enemy.counter; i++) {
-            positionCardChouseEnemy = i;
-            std::this_thread::sleep_for(std::chrono::milliseconds(200));
-            if (enemy.cards[i]->suit != desk.suitInt && enemy.cards[i]->value < x) {
-                
-                j = i;
-                x = enemy.cards[i]->value;
-            }
-        }
-        field.addCards(enemy.removeCard(j));
-        return 1;
 
-
-    }
-
-    else if (field.counter % 2 == 0 ) {
-        int x = 13;
-        int j = 0;
-        bool flag = 0;
-        for (int i = 0; i < enemy.counter; i++) {
-            positionCardChouseEnemy = i;
-            std::this_thread::sleep_for(std::chrono::milliseconds(200));
-            //если карта не козырь и её значение меньше чем x и он может её докинуть
-            if (enemy.cards[i]->suit != desk.suitInt && enemy.cards[i]->value < x && scanDopCard(field, enemy.cards[i][0], desk)) {
-                j=i;
-                x= enemy.cards[i]->value;
-                flag=1;
-
-            }
-
-            
-        }
-        if (flag) {
-            field.addCards(enemy.removeCard(j));
-            return 1;
-        }
-        else {
-            ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-            //карты уходят в сброс
-            for (int i = 0;  field.counter >0;i++) {
-                animCard = 5;
-                std::this_thread::sleep_for(std::chrono::milliseconds(200));
-                discarding.addCards(field.removeCard());
-                cout << "CARD ADD DISKARDING" << endl;
-                
-            }
-            cout << field.counter << endl;
-            ROUND_END = 1;
-            return 1;
-        }
-        
-    }
-    else {
-        int x = 13;
-        int j = 0;
-        bool flag = 0;
-        //проверка какая минимальная карта может побить карту на поле
-        for (int i = 0; i <enemy.counter; i++) {
-            positionCardChouseEnemy = i;
-            std::this_thread::sleep_for(std::chrono::milliseconds(200));
-            //если карта не козырь и её значение меньше чем предыдущая карта и он может ей побить
-            if (enemy.cards[i]->suit != desk.suitInt && enemy.cards[i]->value < x && scanToFight(field, enemy.cards[i][0], desk)) {
-                j = i;
-                x = enemy.cards[i]->value;
-                flag = 1;
-            }
-
-
-        }
-        if (flag) {
-            field.addCards(enemy.removeCard(j));
-            return 1;
-        }
-        else if (!flag) {
-            x = 13;
-            j = 0;
-            for (int i = 0; i <enemy.counter; i++) {
+        if (field.counter == 0) {
+            //выбирает самую маленькую не козырную карту
+            int x = 15;
+            int j = 0;
+            for (int i = 0; i < enemy.counter; i++) {
                 positionCardChouseEnemy = i;
                 std::this_thread::sleep_for(std::chrono::milliseconds(200));
-                //если карта козырь и её значение меньше чем предыдущая козырная карта и он может ей побить
-                if (enemy.cards[i]->suit == desk.suitInt && enemy.cards[i]->value < x && scanToFight(field, enemy.cards[i][0], desk)) {
+                if (enemy.cards[i]->suit != desk.suitInt && enemy.cards[i]->value < x) {
+
+                    j = i;
+                    x = enemy.cards[i]->value;
+                }
+            }
+            field.addCards(enemy.removeCard(j));
+            return 1;
+
+
+        }
+
+        else if (field.counter % 2 == 0) {
+            int x = 15;
+            int j = 0;
+            bool flag = 0;
+            for (int i = 0; i < enemy.counter; i++) {
+                positionCardChouseEnemy = i;
+                std::this_thread::sleep_for(std::chrono::milliseconds(200));
+                //если карта не козырь и её значение меньше чем x и он может её докинуть
+                if (enemy.cards[i]->suit != desk.suitInt && enemy.cards[i]->value < x && scanDopCard(field, enemy.cards[i][0], desk)) {
                     j = i;
                     x = enemy.cards[i]->value;
                     flag = 1;
+
                 }
+
+
             }
             if (flag) {
                 field.addCards(enemy.removeCard(j));
                 return 1;
             }
-        }
-        else {
-            //карты с поля перемещаются к противнику
-            for (int i = 0; i <= field.counter; i++) {
-                animCard = 4;
-                std::this_thread::sleep_for(std::chrono::milliseconds(200));
-                enemy.addCards(field.removeCard());
-                
+            else {
+                ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+                //карты уходят в сброс
+                for (int i = 0; field.counter > 0; i++) {
+
+                    discarding.addCards(field.removeCard());
+                    while (animCard) {
+
+                        std::this_thread::sleep_for(std::chrono::milliseconds(200));
+                        //ожидание окончания анимации
+                    }
+
+
+                }
+                animCard = 5;
+                cout << "CARD ADD DISKARDING" << endl;
+                cout << field.counter << endl;
+                ROUND_END = 1;
+                return 1;
             }
-            enemy.addCards(field.removeCard());
-            cout << "ENEMY TAKE ALL card" << endl;
-            ROUND_END = 1;
-            
-            return 1;
+
         }
-    }
+
+        else {
+            int x = 15;
+            int j = 0;
+            bool flag = 0;
+            //проверка какая минимальная карта может побить карту на поле
+            for (int i = 0; i < enemy.counter; i++) {
+                positionCardChouseEnemy = i;
+                std::this_thread::sleep_for(std::chrono::milliseconds(200));
+                //если карта не козырь и её значение меньше чем предыдущая карта и он может ей побить
+                if (enemy.cards[i]->suit != desk.suitInt && enemy.cards[i]->value < x && scanToFight(field, enemy.cards[i][0], desk)) {
+                    j = i;
+                    x = enemy.cards[i]->value;
+                    flag = 1;
+                }
+
+
+            }
+            if (flag) {
+                field.addCards(enemy.removeCard(j));
+                return 1;
+            }
+            else if (!flag) {
+                x = 15;
+                j = 0;
+                for (int i = 0; i < enemy.counter; i++) {
+                    positionCardChouseEnemy = i;
+                    std::this_thread::sleep_for(std::chrono::milliseconds(200));
+                    //если карта козырь и её значение меньше чем предыдущая козырная карта и он может ей побить
+                    if (enemy.cards[i]->suit == desk.suitInt && enemy.cards[i]->value < x && scanToFight(field, enemy.cards[i][0], desk)) {
+                        j = i;
+                        x = enemy.cards[i]->value;
+                        flag = 1;
+                    }
+                }
+                if (flag) {
+                    field.addCards(enemy.removeCard(j));
+                    return 1;
+                }
+                else {
+                    //карты с поля перемещаются к противнику
+                    animCard = 4;
+                    for (int i = 0; field.counter-1 >= 0; i++) {
+                        enemy.addCards(field.removeCard());
+
+                    }
+                    std::this_thread::sleep_for(std::chrono::milliseconds(500));
+                    cout << "ENEMY TAKE ALL card" << endl;
+                    ROUND_END = 1;
+                    return 1;
+                }
+            }
+
+        }
 
 
 }
 //переключатель позиции выбора
 void chouser(RenderWindow& window, Player& player) {
+    pushR = 0;
     if (sf::Keyboard::isKeyPressed(sf::Keyboard::Left))
     {
-        if (positionCardChouse == 0) positionCardChouse = player.counter - 1;
+        pushE = 0;
+        if (positionCardChouse < 0) positionCardChouse = player.counter - 1;
         else positionCardChouse--;
-        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+        cout << positionCardChouse << endl;
+        std::this_thread::sleep_for(std::chrono::milliseconds(150));
 
     }
     if (sf::Keyboard::isKeyPressed(sf::Keyboard::Right))
     {
-        if (positionCardChouse == player.counter-1) positionCardChouse = 0;
+        pushE = 0;
+        if (positionCardChouse > player.counter-1) positionCardChouse = 0;
         else positionCardChouse++;
-        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+        cout << positionCardChouse << endl;
+        std::this_thread::sleep_for(std::chrono::milliseconds(150));
 
     }
 }
@@ -383,7 +411,7 @@ bool playerTurn(Player& player, Desk& field, Desk& desk, Desk& discarding) {
     std::this_thread::sleep_for(std::chrono::milliseconds(1000));
     if (field.counter == 0) {
          //ожидает ход игрока
-        while (1) {
+        while (player.counter != 0) {
             if (pushE) {
                 std::this_thread::sleep_for(std::chrono::milliseconds(200));
                 field.addCards(player.removeCard(positionCardChouse));
@@ -394,7 +422,7 @@ bool playerTurn(Player& player, Desk& field, Desk& desk, Desk& discarding) {
     }
     //на поле четное колличество карт
     else if (field.counter % 2 == 0) {
-        while (1) {
+        while (player.counter != 0) {
 
             if (pushE) {
                 if (scanDopCard(field, player.cards[positionCardChouse][0], desk)) {
@@ -408,13 +436,20 @@ bool playerTurn(Player& player, Desk& field, Desk& desk, Desk& discarding) {
             if (pushR) {
                 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
                 //карты уходят в сброс
+                cout << "CARD ADD DISKARDING" << endl;
                 for (int i = 0; field.counter > 0; i++) {
-                    animCard = 5;
-                    std::this_thread::sleep_for(std::chrono::milliseconds(200));
+                    
+
                     discarding.addCards(field.removeCard());
-                    cout << "CARD ADD DISKARDING" << endl;
+                    while (animCard) {
+
+                        std::this_thread::sleep_for(std::chrono::milliseconds(200));
+                        //ожидание окончания анимации
+                    }
+                    
 
                 }
+                animCard = 5;
                 discarding.addCards(field.removeCard());
                 cout << field.counter<<endl;
                 ROUND_END = 1;
@@ -425,7 +460,7 @@ bool playerTurn(Player& player, Desk& field, Desk& desk, Desk& discarding) {
         }
     }
     else {
-        while (1) {
+        while (player.counter != 0) {
             if (pushE) {
                 //может ли выбранная карта побить
                 if ((scanToFight(field, player.cards[positionCardChouse][0], desk))) {
@@ -438,7 +473,7 @@ bool playerTurn(Player& player, Desk& field, Desk& desk, Desk& discarding) {
             }
             if (pushR) {
                 //игроку нечем побить карту
-                for (int i = 0; i <= field.counter; i++) {
+                for (int i = 0; field.counter-1 >= 0; i++) {
                     animCard = 3;
                     std::this_thread::sleep_for(std::chrono::milliseconds(200));
                     player.addCards(field.removeCard());
@@ -489,7 +524,7 @@ void drawEnemyCards(RenderWindow& window, Player& player)
         sf::Sprite sprite(player.cards[i][0].texture);
         sprite.setPosition(startX + i * (cardWidth - padding), y);
         sprite.rotate(6.0f);
-        if (i == positionCardChouseEnemy && TURN == 0) {
+        if (i == positionCardChouseEnemy && TURN == 0 && flagStart) {
             sprite.move(0, +40);
         }
         window.draw(sprite);
@@ -502,8 +537,8 @@ void drawEnemyCards(RenderWindow& window, Player& player)
         sf::Sprite sprite(player.backTexture);
         sprite.setPosition(startX + i * (cardWidth - padding), y);
         sprite.rotate(6.0f);
-        if (i == positionCardChouseEnemy && TURN == 0) {
-            sprite.move(0, -40);
+        if (i == positionCardChouseEnemy && TURN == 0&& flagStart) {
+            sprite.move(0, +40);
         }
 
         window.draw(sprite);
@@ -603,13 +638,13 @@ void drawAnimCard(Player& player, Player& enemy, Desk& desk, Desk& discarding, D
         //хотел использовать case но там нельзя инициализировать переменные 
         bool flag = 0;
         if (animCard == 1) {
-            int startX = (window.getSize().x) - 700 + tranlocateCard;
+            int startX = (window.getSize().x) - 800 + tranlocateCard;
             int y = window.getSize().y / 2 - 50 + tranlocateCard;
             sprite.setPosition(startX + 50, y);
 
         }
         else if (animCard == 2) {
-            int startX = (window.getSize().x) - 700 + tranlocateCard;
+            int startX = (window.getSize().x) - 800 + tranlocateCard;
             int y = window.getSize().y / 2 - 50 - tranlocateCard;
             sprite.setPosition(startX + 50, y);
 
@@ -627,7 +662,7 @@ void drawAnimCard(Player& player, Player& enemy, Desk& desk, Desk& discarding, D
         }
         else if (animCard == 5) {
             int startX = (window.getSize().x / 2);
-            int y = window.getSize().y / 2;
+            int y = window.getSize().y / 2-50;
             sprite.setPosition(startX + tranlocateCard, y);
         }
         tranlocateCard += 10;
@@ -635,6 +670,7 @@ void drawAnimCard(Player& player, Player& enemy, Desk& desk, Desk& discarding, D
             tranlocateCard = 0;
             animCard = 0;
         }
+        sprite.rotate(0.5f + tranlocateCard/2);
         window.draw(sprite);
     }
 
@@ -652,6 +688,16 @@ void PrintAllCard(Player& player, Player& enemy, Desk& desk, Desk& discarding, D
     // Создаем прямоугольник с размерами окна и задаем ему текстуру
     sf::RectangleShape background(sf::Vector2f(window.getSize().x, window.getSize().y));
     background.setTexture(&backGroundTexture);
+
+    //загружаем шрифт и текст
+    Font font;
+    sf::Text text;
+    font.loadFromFile("font.ttf");
+    text.setFont(font);
+    text.setCharacterSize(24);
+    text.setFillColor(sf::Color::White);
+
+
     while (gameIsOpen) {
         // Обработка событий
         sf::Event event;
@@ -659,12 +705,22 @@ void PrintAllCard(Player& player, Player& enemy, Desk& desk, Desk& discarding, D
             if (event.type == sf::Event::Closed) {
                 gameIsOpen = false; // Выходим из цикла, если окно закрывается
             }
+            //используется для отладки ////////////////////////////////////////////////////////////////////////////////////////////////////
             if (event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::Space) {
+
                 std::cout << "Space key pressed" << std::endl;
-                //player.addCards(desk.removeCard());
-                //field.addCards((desk.removeCard()));
+                
+                
+                while (desk.counter) {
+                    discarding.addCards(desk.removeCard());
+                }
+                for (int i = player.counter - 1; i>=0;i--) {
+                    discarding.addCards(player.removeCard(i));
+                }
+                std::this_thread::sleep_for(std::chrono::milliseconds(200));
                 cout << TURN << endl;
             }
+            //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
             if (event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::E) {
                 pushE = 1;
             }
@@ -678,16 +734,82 @@ void PrintAllCard(Player& player, Player& enemy, Desk& desk, Desk& discarding, D
         window.clear();
         window.draw(background);
 
-        // Рисуем карты 
-        drawPlayerCards(window, player);
-        drawEnemyCards(window, enemy);
-        drawDesk(window, desk);
-        drawDiscarding(window, discarding);
-        drawField(window, field);
-        chouser(window, player); //меняет глобальную переменную positionCardChouse
-        //отрисовка анимаций перемещения карт
-        drawAnimCard(player, enemy, desk, discarding, field, window);
+        if (win == 0) {
+            // Рисуем карты 
+            drawPlayerCards(window, player);
+            drawEnemyCards(window, enemy);
+            drawDesk(window, desk);
+            drawDiscarding(window, discarding);
+            drawField(window, field);
+            chouser(window, player); //меняет глобальную переменную positionCardChouse
+            //отрисовка анимаций перемещения карт
+            drawAnimCard(player, enemy, desk, discarding, field, window);
+        }
+        if (flagStart) {
+            if (TURN&&win==0) {
+
+                text.setPosition(window.getSize().x / 2 - 50, window.getSize().y / 2 + 100);
+                text.setString("YOU turn");
+            }
+            else {
+                text.setPosition(window.getSize().x / 2 - 100, window.getSize().y / 2 - 100);
+                text.setString("Opponent turn");
+
+            }
+            if (win == 1) {
+                text.setPosition(window.getSize().x / 2 - 250, window.getSize().y / 2-50);
+                text.setCharacterSize(60);
+                text.setString("!!!YOU WIN!!!");
+                
+            }
+            else if (win == 2) {
+                text.setPosition(window.getSize().x / 2 - 250, window.getSize().y / 2-50);
+                text.setCharacterSize(60);
+                text.setString("!!!YOU LOSE!!!");
+
+            }
+        
+        }
+
+        window.draw(text);
         window.display();
+    }
+}
+void sound() {
+    sf::SoundBuffer soundBuffer1;
+    sf::SoundBuffer soundBuffer2;
+    sf::SoundBuffer soundBuffer3;
+    sf::SoundBuffer soundBuffer4;
+    soundBuffer1.loadFromFile("card.wav");
+    soundBuffer2.loadFromFile("cardAdd.wav");
+    soundBuffer3.loadFromFile("fail.wav");
+    soundBuffer4.loadFromFile("win.wav");
+
+
+
+    sf::Sound sound1(soundBuffer1);
+    sf::Sound sound2(soundBuffer2);
+    sf::Sound sound3(soundBuffer3);
+    sf::Sound sound4(soundBuffer4);
+    while(1) {
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+        switch (flagSound) {
+        case(1):
+            sound1.play();
+            cout<<"SOUND"<<endl;
+            break;
+        case(2):
+            sound2.play();
+            break;
+        case(3):
+            sound3.play();
+            break;
+        case(4):
+            sound4.play();
+            break;
+        }
+        flagSound = 0;
+
     }
 }
 void game(Player& player, Player& enemy, Desk& desk, Desk& discarding, Desk& field) {
@@ -699,34 +821,53 @@ void game(Player& player, Player& enemy, Desk& desk, Desk& discarding, Desk& fie
     std::this_thread::sleep_for(std::chrono::milliseconds(300));
     //кто ходит первым
     TURN = scanToStart(desk, player, enemy);
+    flagStart = 1;
 
         while (gameIsOpen) {
-            cout << "ROUND_END: " << ROUND_END << " TURN: " << TURN << " chouseCard: " << positionCardChouse << " GameIsOpen " << gameIsOpen;
+            //cout << "ROUND_END: " << ROUND_END << " TURN: " << TURN << " chouseCard: " << positionCardChouse << " GameIsOpen " << gameIsOpen;
             cout << "HOD" << endl;
             //если ходит игрок
             if (TURN) {
                 cout << "TURN PLAYER" << endl;
-                playerTurn(player, field, desk, discarding);
-                TURN = !TURN;
+#ifdef botON==0
+                playerTurn(player, field, desk, discarding);// КОД ИГРОКА
+#elif botON==1
+                enemyTurn(field, player, 1, desk, discarding);// КОД БОТА
+#endif         
             }
 
             //или же ходит противник
             else {
                 cout << "TURN ENEMY" << endl;
-                enemyTurn(field, enemy, 1, desk, discarding);
-                TURN = !TURN;
-
-
+                enemyTurn(field, enemy, 1, desk, discarding);// КОД БОТА
+                
             }
 
             if (ROUND_END == 1) {
                 addCard(desk, player);
                 addCard(desk, enemy);
                 ROUND_END = 0;
-
+                
+            }
+            else {
+                flagSound = 1;
             }
             
+            
+            if (desk.counter == 0) {
+                if (player.counter == 0) {
+                    win = 1;
+                    flagSound = 4;
+                    break;
+                }
+                else if (enemy.counter == 0) {
+                    win = 2;
+                    flagSound = 3;
+                    break;
+                }
+            }
 
+            TURN = !TURN;
         }
     
 }
@@ -749,11 +890,14 @@ int main()
     initThread.join();
 
 
-    // Создаем поток для отрисовки и задачи нужных параметров окну
-    std::thread renderThread(PrintAllCard, std::ref(player), std::ref(enemy), std::ref(desk), std::ref(discarding), std::ref(field));
+    // Создаем поток для отрисовки и создание окна 
+    thread renderThread(PrintAllCard, std::ref(player), std::ref(enemy), std::ref(desk), std::ref(discarding), std::ref(field));
+    //поток для звука
+    thread renderSound(sound);
+    //поток логики
+    thread gameThread(game, std::ref(player), std::ref(enemy), std::ref(desk), std::ref(discarding), std::ref(field));
 
-    std::thread gameThread(game, std::ref(player), std::ref(enemy), std::ref(desk), std::ref(discarding), std::ref(field));
-
+    renderSound.join();
     renderThread.join();
     gameThread.join();
     return 0;
