@@ -6,26 +6,28 @@
 #include <thread>//потоки
 #include <chrono>//время
 #include <SFML/Audio.hpp>
-#define enemyCardDraw 1//1- показать 2- спрятать карты противника
-bool botON = 0;//0-бот отключен 1-включен (вместо игрока)
+
 #define random(a,b) a+rand()%(b+1-a)
 using namespace std;
 using namespace sf;
 
-bool flagStartInit = 0;
+
+bool enemyCardDraw = 1;//1- показать 0- спрятать карты противника
+bool botON = 0;//0-бот отключен 1-включен (вместо игрока)
+bool flagStartInit = 0;//флаг окончания инициализации
 bool flagStart = 0;
-bool TURN = 0;
-bool ROUND_END = 0;
+bool TURN = 0;//флаг хода 
+bool ROUND_END = 0;//флаг окончания рауда
 int positionCardChouse = 0;//отслеживание какую карты выбрал игрок
 int positionCardChouseEnemy = 0;//отслеживание какую карты выбрал противник
 bool pushE = 0;//для отслеживания нажатия игрока в потоке отрисовки, дабы не синхронизировать потоки
 bool pushR = 0;
-const string CARDSUIT[4]{"Spades","Hearts","Diamonds","Clubs" };
+const string CARDSUIT[4]{"Spades","Hearts","Diamonds","Clubs" };//для вывода
 int tranlocateCard = 0;//перемещение карт
-bool gameIsOpen = 1;
-int flagSound = 0;
-int win = 0;
-int animCard = 0;
+bool gameIsOpen = 1;//флаг открытой игры
+int flagSound = 0;//звуковой флаг
+int win = 0;//флаг победы
+int animCard = 0;//флаг анимаций
 //запуск анимаций
 /*0-нет анимации
 1-получение карты из колоды игроком
@@ -34,7 +36,7 @@ int animCard = 0;
 4-из поля к противнику
 5-из поля в сброс
 */
-int speedGame = 0;//0- нормальная скорость
+int speedGame = 0;//130- нормальная скорость
 
 struct Card
 {
@@ -512,35 +514,38 @@ void drawEnemyCards(RenderWindow& window, Player& player)
     int startX = (window.getSize().x - (player.counter * (cardWidth - padding) + padding)) / 2;
     int y = window.getSize().y - 600;
 
-#if enemyCardDraw==1
-    for (int i = 0; i < player.counter; i++)
-    {
+    if (enemyCardDraw == 1) {
+        for (int i = 0; i < player.counter; i++)
+        {
 
-         Sprite sprite(player.cards[i][0].texture);
-        sprite.setPosition(startX + i * (cardWidth - padding), y);
-        sprite.rotate(6.0f);
-        if (i == positionCardChouseEnemy && TURN == 0 && flagStart) {
-            sprite.move(0, +40);
+            Sprite sprite(player.cards[i][0].texture);
+            sprite.setPosition(startX + i * (cardWidth - padding), y);
+            sprite.rotate(6.0f);
+            if (i == positionCardChouseEnemy && TURN == 0 && flagStart) {
+                sprite.move(0, +40);
+            }
+            window.draw(sprite);
         }
-        window.draw(sprite);
     }
 
 
-#elif enemyCardDraw==2
-    for (int i = 0; i < player.counter; i++)
-    {
-         Sprite sprite(player.backTexture);
-        sprite.setPosition(startX + i * (cardWidth - padding), y);
-        sprite.rotate(6.0f);
-        if (i == positionCardChouseEnemy && TURN == 0&& flagStart) {
-            sprite.move(0, +40);
-        }
+    else if (enemyCardDraw == 0) {
+        for (int i = 0; i < player.counter; i++)
+        {
+            Sprite sprite(player.backTexture);
+            sprite.setPosition(startX + i * (cardWidth - padding), y);
+            sprite.rotate(6.0f);
+            if (i == positionCardChouseEnemy && TURN == 0 && flagStart) {
+                sprite.move(0, +40);
+            }
 
-        window.draw(sprite);
+            window.draw(sprite);
+        }
     }
-#endif
 
 }
+
+
 void drawDesk(RenderWindow& window, Desk& desk) {
     
     int cardWidth = 70;
@@ -729,10 +734,14 @@ void PrintAllCard(Player& player, Player& enemy, Desk& desk, Desk& discarding, D
             } 
             if (event.type == Event::KeyPressed && event.key.code == Keyboard::U) {
                 if (speedGame!=0)
-                speedGame--;
+                speedGame-=10;
             }
             if (event.type == Event::KeyPressed && event.key.code == Keyboard::I) {
-                speedGame++;
+                if(speedGame<150)
+                speedGame+=10;
+            }
+            if (event.type == Event::KeyPressed && event.key.code == Keyboard::V) {
+                enemyCardDraw =!enemyCardDraw;
             }
 
         }
@@ -741,22 +750,22 @@ void PrintAllCard(Player& player, Player& enemy, Desk& desk, Desk& discarding, D
         window.clear();
         window.draw(background);
         if (botON) {
-            text.setPosition(10, window.getSize().y - 40);
-            text.setCharacterSize(30);
-            text.setString("bot ON");
+            text.setPosition(10, window.getSize().y/2 + 20);
+            text.setCharacterSize(20);
+            text.setString("bot ON B ");
 
         }
         else {
-            text.setPosition(10, window.getSize().y - 40);
-            text.setCharacterSize(30);
-            text.setString("bot OFF");
+            text.setPosition(10, window.getSize().y/2 + 20);
+            text.setCharacterSize(20);
+            text.setString("bot OFF B ");
 
 
         }
         window.draw(text);
 
-        text.setPosition(10, window.getSize().y - 80);
-        text.setCharacterSize(30);
+        text.setPosition(10, window.getSize().y/2 - 75);
+        text.setCharacterSize(20);
         text.setString("Speed "+to_string(speedGame));
         window.draw(text);
 
@@ -831,12 +840,13 @@ void sound() {
      Sound sound2(soundBuffer2);
      Sound sound3(soundBuffer3);
      Sound sound4(soundBuffer4);
+     sound3.setVolume(30);
+     sound4.setVolume(30);
     while(1) {
          this_thread::sleep_for( chrono::milliseconds(100));
         switch (flagSound) {
         case(1):
             sound1.play();
-            cout<<"SOUND"<<endl;
             break;
         case(2):
             sound2.play();
