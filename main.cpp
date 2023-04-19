@@ -36,7 +36,7 @@ int animCard = 0;//флаг анимаций
 4-из поля к противнику
 5-из поля в сброс
 */
-int speedGame = 0;//130- нормальная скорость
+int speedGame = 90;//90- нормальная скорость
 
 struct Card
 {
@@ -311,19 +311,18 @@ bool enemyTurn(Desk& field, Player& enemy,Desk& desk,Desk& discarding) {
                 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
                 //карты уходят в сброс
                 for (int i = 0; field.counter > 0; i++) {
-
-                    discarding.addCards(field.removeCard());
+                    animCard = 5;
+                    
                     while (animCard) {
 
                          this_thread::sleep_for( chrono::milliseconds(200 - speedGame));
                         //ожидание окончания анимации
                     }
-
+                    discarding.addCards(field.removeCard());
 
                 }
-                animCard = 5;
+                
                 cout << "CARD ADD DISKARDING" << endl;
-                cout << field.counter << endl;
                 ROUND_END = 1;
                 return 1;
             }
@@ -372,12 +371,20 @@ bool enemyTurn(Desk& field, Player& enemy,Desk& desk,Desk& discarding) {
                 }
                 else {
                     //карты с поля перемещаются к противнику
-                    animCard = 4;
+                    
                     for (int i = 0; field.counter-1 >= 0; i++) {
-                        enemy.addCards(field.removeCard());
+                        if (enemy.player) {
+                            animCard = 3;
+                        }
+                        else  animCard = 4;
+                        
+                        while (animCard) {
 
+                            this_thread::sleep_for(chrono::milliseconds(200 - speedGame));
+                            //ожидание окончания анимации
+                        }
+                        enemy.addCards(field.removeCard());
                     }
-                     this_thread::sleep_for( chrono::milliseconds(200 - speedGame));
                     cout << "ENEMY TAKE ALL card" << endl;
                     ROUND_END = 1;
                     return 1;
@@ -441,14 +448,15 @@ bool playerTurn(Player& player, Desk& field, Desk& desk, Desk& discarding) {
                 //карты уходят в сброс
                 cout << "CARD ADD DISKARDING" << endl;
                 for (int i = 0; field.counter > 0; i++) {
-                    discarding.addCards(field.removeCard());
+                    
+                    animCard = 5;
                     while (animCard) {
                          this_thread::sleep_for( chrono::milliseconds(200));
                         //ожидание окончания анимации
                     }
+                    discarding.addCards(field.removeCard());
                 }
-                animCard = 5;
-                cout << field.counter<<endl;
+               
                 ROUND_END = 1;
                 pushR = 0;
                 return 1;
@@ -472,10 +480,12 @@ bool playerTurn(Player& player, Desk& field, Desk& desk, Desk& discarding) {
                 //игроку нечем побить карту
                 for (int i = 0; field.counter-1 >= 0; i++) {
                     animCard = 3;
-                     this_thread::sleep_for( chrono::milliseconds(200));
+                    while (animCard) {
+                        this_thread::sleep_for(chrono::milliseconds(200));
+                        //ожидание окончания анимации
+                    }
                     player.addCards(field.removeCard());
                 }
-                player.addCards(field.removeCard());
                 cout << "PLAYER TAKE ALL CARD" << endl;
                 ROUND_END = 1;
 
@@ -580,7 +590,7 @@ void drawDesk(RenderWindow& window, Desk& desk) {
 }
 void drawDiscarding(RenderWindow& window, Desk& discarding) {
 
-    int startX = (window.getSize().x) - 100;
+    int startX = (window.getSize().x) - 40;
     int y = window.getSize().y / 2 - 50;
 
     if (discarding.counter != 0) {
@@ -591,8 +601,7 @@ void drawDiscarding(RenderWindow& window, Desk& discarding) {
 
 }
 void drawField(RenderWindow& window, Desk& field) {
-    //запуск анимации если нет перемещения
-    if (animCard < 3) {
+
         int cardWidth = 40;
         int padding = field.counter * 1.1;//отступ карт
 
@@ -601,15 +610,21 @@ void drawField(RenderWindow& window, Desk& field) {
         int y = window.getSize().y - 350;
 
         //cout << field.counter << endl;
+
         for (int i = 0; i < field.counter; i++)
         {
+            if (animCard > 3) {
+                if (i - 1 == field.counter - 2) {
+                    break;
+                }
+            }
              Sprite sprite(field.cards[i]->texture);
             sprite.setPosition(startX + i * (cardWidth - padding), y);
             sprite.rotate(6.0f);
 
             window.draw(sprite);
         }
-    }
+
 
 }
 void startInit(Player& player, Player& enemy, Desk& desk, Desk& discarding, Desk& field) {
@@ -636,42 +651,56 @@ void drawAnimCard(Player& player, Player& enemy, Desk& desk, Desk& discarding, D
 */
     if (tranlocateCard <= 300 && animCard != 0) {
          Sprite sprite(desk.backTexture);
-        //хотел использовать case но там нельзя инициализировать переменные 
-        bool flag = 0;
+
+        //1-получение карты из колоды игроком
         if (animCard == 1) {
             int startX = (window.getSize().x) - 800 + tranlocateCard;
             int y = window.getSize().y / 2 - 50 + tranlocateCard;
             sprite.setPosition(startX + 50, y);
+            sprite.rotate(0.5f + tranlocateCard / 2);
+
 
         }
+        //2-получение карты из колоды противником
         else if (animCard == 2) {
             int startX = (window.getSize().x) - 800 + tranlocateCard;
             int y = window.getSize().y / 2 - 50 - tranlocateCard;
             sprite.setPosition(startX + 50, y);
+            sprite.rotate(0.5f + tranlocateCard / 2);
 
         }
+        //3 - из поля к игроку
         else if (animCard == 3) {
-            //отрисовка вместо поля
             int startX = (window.getSize().x / 2);
-            int y = window.getSize().y / 2;
+            int y = window.getSize().y / 2 - 50;
+            sprite.setTexture(field.cards[field.counter - 1]->texture);
+
+
             sprite.setPosition(startX, y + tranlocateCard);
         }
+        //4-из поля к противнику
         else if (animCard == 4) {
+
+
             int startX = (window.getSize().x / 2);
-            int y = window.getSize().y / 2;
+            int y = window.getSize().y / 2 - 50;
+            sprite.setTexture(field.cards[field.counter - 1]->texture);
             sprite.setPosition(startX, y - tranlocateCard);
         }
+        //5-из поля в сброс
         else if (animCard == 5) {
-            int startX = (window.getSize().x / 2);
-            int y = window.getSize().y / 2-50;
-            sprite.setPosition(startX + tranlocateCard, y);
+            int startX = (window.getSize().x / 2-30 );
+            int y = window.getSize().y / 2 - 50;
+            sprite.setTexture(field.cards[field.counter - 1]->texture);
+            sprite.setPosition(startX + tranlocateCard*2, y);
+
         }
         tranlocateCard += 10;
         if (tranlocateCard >= 300) {
             tranlocateCard = 0;
             animCard = 0;
         }
-        sprite.rotate(0.5f + tranlocateCard/2);
+        
         window.draw(sprite);
     }
 
@@ -775,10 +804,11 @@ void PrintAllCard(Player& player, Player& enemy, Desk& desk, Desk& discarding, D
             drawEnemyCards(window, enemy);
             drawDesk(window, desk);
             drawDiscarding(window, discarding);
+            drawAnimCard(player, enemy, desk, discarding, field, window);
             drawField(window, field);
             chouser(window, player); //меняет глобальную переменную positionCardChouse
             //отрисовка анимаций перемещения карт
-            drawAnimCard(player, enemy, desk, discarding, field, window);
+            
         }
         if (flagStart) {
             if (TURN&&win==0) {
@@ -863,7 +893,7 @@ void sound() {
     }
 }
 void game(Player& player, Player& enemy, Desk& desk, Desk& discarding, Desk& field) {
-     this_thread::sleep_for( chrono::milliseconds(5000));
+     this_thread::sleep_for( chrono::milliseconds(2000));
     //раздаем по 6 карт
     player.player = 1;
     addCard(desk, player);
