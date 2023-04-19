@@ -119,7 +119,11 @@ struct Player {
         if (index < 0 || index >= counter) {
             return nullptr;
         }
-        cout << "DELL";
+        if (player) {
+            cout << "PLAYER: ";
+        }
+        else cout << "ENEMY: ";
+        cout << "DEL: ";
         cards[index]->show();
         Card* removedCard = cards[index];
         cards[index] = nullptr; // set to nullptr to avoid double deletion
@@ -149,7 +153,11 @@ struct Player {
         if (card == nullptr) {
             return;
         }
-        cout << "ADD";
+        if (player) {
+            cout << "PLAYER: ";
+        }
+        else cout << "ENEMY: ";
+        cout << "ADD: ";
         card->show();
         Card** newCards = new Card * [counter + 1];
         for (int i = 0; i < counter; i++) {
@@ -218,9 +226,7 @@ bool scanToStart(Desk& desk, Player& player, Player& enemy) {
     int enemyValue = 15;
     for (int i = 0; i < 6; i++) {
         //если карта козырь и она меньше предыдущей карты 
-        //cout << "player card suit" << player.cards[i][0].suit << "Player card value"<< player.cards[i][0].value << endl;
-        //cout << "desk card suit" << desk.suitInt << "old value"<< playerValue << endl;
-        cout << player.cards[i][0].suit << "==" << desk.suitInt << "&&" << player.cards[i][0].value << "<" << playerValue << endl;
+
         if (player.cards[i][0].suit == desk.suitInt && player.cards[i][0].value <playerValue) {
             playerValue = player.cards[i][0].value;
         }
@@ -228,7 +234,7 @@ bool scanToStart(Desk& desk, Player& player, Player& enemy) {
             enemyValue = enemy.cards[i][0].value;
         }
     }
-    cout << "EnemyValue: " << enemyValue << "PlayerValue: " << playerValue << endl;
+
     return ((playerValue < enemyValue) ? 1 : 0);
 
 
@@ -403,7 +409,6 @@ void chouser(RenderWindow& window, Player& player) {
         pushE = 0;
         if (positionCardChouse < 0) positionCardChouse = player.counter - 1;
         else positionCardChouse--;
-        cout << positionCardChouse << endl;
          this_thread::sleep_for( chrono::milliseconds(150));
 
     }
@@ -412,7 +417,6 @@ void chouser(RenderWindow& window, Player& player) {
         pushE = 0;
         if (positionCardChouse > player.counter-1) positionCardChouse = 0;
         else positionCardChouse++;
-        cout << positionCardChouse << endl;
          this_thread::sleep_for( chrono::milliseconds(150));
 
     }
@@ -578,7 +582,6 @@ void drawDesk(RenderWindow& window, Desk& desk) {
 
     }
     else if (desk.counter == 1) {
-        cout << "One card left" << endl;
         Sprite trump(desk.cards[0]->texture);
         trump.setPosition(startX, y);
         trump.rotate(90.0f);
@@ -609,7 +612,6 @@ void drawField(RenderWindow& window, Desk& field) {
         int startX = (window.getSize().x - (field.counter * (cardWidth - padding))) / 2;
         int y = window.getSize().y - 350;
 
-        //cout << field.counter << endl;
 
         for (int i = 0; i < field.counter; i++)
         {
@@ -749,7 +751,6 @@ void PrintAllCard(Player& player, Player& enemy, Desk& desk, Desk& discarding, D
                     discarding.addCards(player.removeCard(i));
                 }
                  this_thread::sleep_for( chrono::milliseconds(200));
-                cout << TURN << endl;
             }
             //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
             if (event.type ==  Event::KeyPressed && event.key.code ==  Keyboard::E) {
@@ -904,8 +905,7 @@ void game(Player& player, Player& enemy, Desk& desk, Desk& discarding, Desk& fie
     flagStart = 1;
 
         while (gameIsOpen) {
-            //cout << "ROUND_END: " << ROUND_END << " TURN: " << TURN << " chouseCard: " << positionCardChouse << " GameIsOpen " << gameIsOpen;
-            cout << "HOD" << endl;
+
             //если ходит игрок
             if (TURN) {
                 cout << "TURN PLAYER" << endl;
