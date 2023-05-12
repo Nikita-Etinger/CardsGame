@@ -1,4 +1,4 @@
-bool enemyCardDraw = 1;//1- показать 0- спрятать карты противника
+bool enemyCardDraw = 0;//1- показать 0- спрятать карты противника
 bool botON = 0;//0-бот отключен 1-включен (вместо игрока)
 bool flagStartInit = 0;//флаг окончания инициализации
 bool flagStart = 0;
